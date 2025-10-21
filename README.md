@@ -1,37 +1,54 @@
-# Hierarchical Data Visualizer
+# COA Management System
 
-A professional Streamlit application for visualizing and managing hierarchical data with modern UI components and advanced analytics.
+A professional Streamlit application for managing Chart of Accounts (COA) data with Keboola integration, hierarchical visualization, and advanced data transformation capabilities.
 
 ## Features
 
-- **🌳 Hierarchical Data Visualization**: Drill-down navigation through complex data structures
-- **📝 Advanced Data Editing**: Full CRUD operations with AG Grid integration
-- **📊 Interactive Analytics**: Comprehensive charts and insights
-- **🎨 Modern UI**: Professional design using Hydralit Components
-- **📱 Responsive Design**: Works on desktop and mobile devices
+- **🏦 Chart of Accounts Management**: Complete CRUD operations for financial account structures
+- **🌳 Hierarchical Data Visualization**: Drill-down navigation through COA hierarchy
+- **📝 Advanced Data Editing**: Full CRUD operations with session-based data management
+- **🔄 Keboola Integration**: Direct data loading and saving to Keboola platform
+- **📊 Interactive Analytics**: Comprehensive charts and financial insights
+- **🔄 Data Transformation**: COA enrichment and business subunit mapping
+- **🎨 Modern UI**: Professional design with responsive layout
+- **👥 Multi-user Support**: Session-based data isolation for concurrent users
 
 ## Technology Stack
 
 - **Streamlit**: Web application framework
+- **Keboola Streamlit**: Direct integration with Keboola platform
+- **Pandas**: Data manipulation and analysis
+- **Plotly**: Interactive visualizations
 - **AG Grid**: Advanced data grid with editing capabilities
 - **Hydralit Components**: Modern UI components
-- **Plotly**: Interactive visualizations
-- **Pandas**: Data manipulation and analysis
 
 ## Installation
 
 1. **Clone the repository**:
    ```bash
    git clone <repository-url>
-   cd hierarchical-data-visualizer
+   cd cao
    ```
 
-2. **Install dependencies**:
+2. **Create virtual environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Run the application**:
+4. **Configure Keboola credentials**:
+   Create `.streamlit/secrets.toml`:
+   ```toml
+   kbc_token="your-keboola-token"
+   kbc_url="https://connection.europe-west3.gcp.keboola.com/"
+   ```
+
+5. **Run the application**:
    ```bash
    streamlit run app.py
    ```
@@ -39,89 +56,111 @@ A professional Streamlit application for visualizing and managing hierarchical d
 ## Project Structure
 
 ```
-hierarchical-data-visualizer/
-├── app.py                 # Main application entry point
-├── requirements.txt       # Python dependencies
-├── README.md             # Project documentation
-├── pages/                # Application pages
+cao/
+├── app.py                           # Main application entry point
+├── requirements.txt                 # Python dependencies
+├── README.md                        # Project documentation
+├── .gitignore                      # Git exclusions
+├── .streamlit/
+│   └── secrets.toml                # Keboola credentials
+├── pages/                          # Application pages
 │   ├── __init__.py
-│   ├── dashboard.py      # Main dashboard with data visualization
-│   ├── data_editor.py    # Data editing interface
-│   └── analytics.py      # Advanced analytics and insights
-└── utils/                # Utility modules
+│   ├── coa_editor.py              # COA editing interface
+│   ├── coa_import_export.py       # Data import/export
+│   ├── coa_transformation.py     # Data transformation
+│   └── analytics.py               # Analytics and insights
+└── utils/                          # Utility modules
     ├── __init__.py
-    ├── config.py         # Application configuration
-    └── data_manager.py   # Data management utilities
+    ├── coa_data_manager.py        # COA data management
+    └── coa_transformer.py         # Data transformation logic
 ```
 
 ## Usage
 
-### Dashboard
-- View hierarchical data in multiple formats
-- Interactive data tables with filtering and sorting
-- Real-time metrics and KPIs
-- Drill-down navigation through data hierarchy
+### Dashboard (Editor)
+- **Hierarchical View**: Navigate through COA structure with expand/collapse
+- **Data Table**: View and edit accounts in tabular format
+- **Search & Filter**: Find specific accounts by code, name, or business unit
+- **Add/Edit/Delete**: Full CRUD operations with validation
+- **Session Management**: Changes are isolated per user session
 
-### Data Editor
-- **Edit Existing**: Modify data directly in the grid
-- **Add New**: Create new items with form validation
-- **Delete Items**: Remove items with hierarchy awareness
+### Import/Export
+- **Excel Import**: Upload COA data from Excel files
+- **Data Validation**: Comprehensive validation rules
+- **Export Options**: Download data in various formats
+- **Bulk Operations**: Handle large datasets efficiently
+
+### Transform
+- **Business Subunits**: Load from Keboola with caching
+- **COA Enrichment**: Build hierarchy levels and identify leaf nodes
+- **Business Unit Mapping**: Create subunit-specific COA structures
+- **Central COA Mapping**: Generate mappings to central (FININ) COA
+- **Debug Tools**: Validate transformation completeness
 
 ### Analytics
-- **Overview**: Key metrics and distributions
-- **Hierarchy Analysis**: Depth analysis and relationships
+- **Overview Metrics**: Account counts, business units, statement types
+- **Hierarchy Analysis**: Depth analysis and relationship mapping
 - **Trends**: Time-series analysis and patterns
-- **Insights**: AI-generated recommendations
+- **Insights**: Data quality and completeness metrics
 
 ## Key Features
 
+### Keboola Integration
+- **Direct Data Loading**: Read COA data from Keboola tables
+- **Incremental Updates**: Session-based change tracking
+- **Caching**: Optimized data loading with 5-minute cache
+- **Error Handling**: Robust error management and user feedback
+
+### Session-Based Data Management
+- **User Isolation**: Each user has independent working copy
+- **Change Tracking**: Track all modifications with audit trail
+- **Unsaved Changes Warning**: Prevent accidental data loss
+- **Refresh Control**: Manual data refresh with confirmation
+
 ### Hierarchical Data Management
-- Support for multi-level data structures
-- Parent-child relationships
-- Automatic hierarchy depth calculation
-- Bulk operations with hierarchy awareness
+- **Multi-level Structure**: Support for complex COA hierarchies
+- **Parent-Child Relationships**: Automatic relationship management
+- **Level Calculation**: Dynamic hierarchy depth calculation
+- **Bulk Operations**: Hierarchy-aware bulk operations
 
-### Advanced Data Grid
-- Inline editing capabilities
-- Column filtering and sorting
-- Row selection and bulk operations
-- Export functionality
-- Responsive design
-
-### Interactive Visualizations
-- Dynamic charts with Plotly
-- Real-time data updates
-- Customizable chart types
-- Export capabilities
-
-### Modern UI Components
-- Professional navigation with Hydralit
-- Responsive design
-- Dark/light theme support
-- Mobile-friendly interface
+### Data Transformation
+- **COA Enrichment**: Add hierarchy levels and metadata
+- **Business Subunit Mapping**: Create unit-specific COA structures
+- **Central COA Integration**: Map to central accounting standards
+- **Validation**: Comprehensive data quality checks
 
 ## Configuration
 
-The application can be configured through `utils/config.py`:
+### Keboola Setup
+1. **Get Credentials**: Obtain Keboola token and URL from your project
+2. **Update secrets.toml**: Add your credentials to `.streamlit/secrets.toml`
+3. **Table Access**: Ensure access to required Keboola tables:
+   - `in.c-keboola-ex-google-drive-01k7haj8zpdqrevsrchqxx4p87.KBC_COA_INPUT`
+   - `out.c-999_initiation_tables_creation.DC_BUSINESS_SUBUNIT`
 
-- Grid display options
-- Theme settings
-- Data limits
-- Auto-save preferences
+### Data Format
+The application works with COA data containing:
+- `CODE_FIN_STAT`: Account code
+- `NAME_FIN_STAT`: Account name
+- `CODE_PARENT_FIN_STAT`: Parent account code
+- `FK_BUSINESS_UNIT`: Business unit identifier
+- `TYPE_FIN_STATEMENT`: Statement type (BS/PL)
+- `TYPE_ACCOUNT`: Account type
+- `NUM_FIN_STAT_ORDER`: Display order
 
-## Data Format
+## Development
 
-The application expects hierarchical data with the following structure:
+### Code Structure
+- **Modular Design**: Separate concerns across pages and utilities
+- **Session Management**: Proper state management with Streamlit
+- **Error Handling**: Comprehensive error handling and user feedback
+- **Caching**: Optimized performance with Streamlit caching
 
-- `id`: Unique identifier
-- `name`: Item name
-- `category`: Top-level category
-- `subcategory`: Sub-category
-- `parent_id`: Reference to parent item (None for root items)
-- `level`: Hierarchy level (0 for root, 1 for children, etc.)
-- `value`: Numeric value
-- `status`: Item status (Active, Inactive, Pending)
-- `created_date`: Creation timestamp
+### Best Practices
+- **Data Validation**: All inputs are validated before processing
+- **Audit Trail**: Complete change tracking for compliance
+- **User Experience**: Intuitive interface with clear feedback
+- **Performance**: Optimized for large datasets
 
 ## Contributing
 
