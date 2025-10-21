@@ -6,7 +6,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from st_aggrid import AgGrid, GridOptionsBuilder, DataReturnMode, GridUpdateMode
 from utils.coa_data_manager import COADataManager
 from datetime import datetime
 from typing import Dict, List, Any
@@ -190,72 +189,6 @@ def show_add_new_item(data_manager: COADataManager, business_unit: str = None):
             else:
                 st.error("❌ Please fill in all required fields (marked with *)")
 
-def show_delete_items(df: pd.DataFrame, data_manager: COADataManager):
-    """Show interface for deleting COA items"""
-    
-    st.subheader("Delete COA Items")
-    
-    # Configure AG Grid for selection
-    gb = GridOptionsBuilder.from_dataframe(df)
-    gb.configure_pagination(paginationAutoPageSize=True)
-    gb.configure_side_bar()
-    gb.configure_selection('multiple', use_checkbox=True)
-    
-    # Configure columns
-    gb.configure_column("CODE_FIN_STAT", width=120, pinned="left")
-    gb.configure_column("NAME_FIN_STAT", width=250)
-    gb.configure_column("TYPE_ACCOUNT", width=100)
-    gb.configure_column("TYPE_FIN_STATEMENT", width=120)
-    gb.configure_column("HIERARCHY_LEVEL", width=80)
-    
-    grid_options = gb.build()
-    
-    # Display the grid
-    grid_response = AgGrid(
-        df,
-        gridOptions=grid_options,
-        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
-        update_mode=GridUpdateMode.MODEL_CHANGED,
-        fit_columns_on_grid_load=True,
-        height=400,
-        enable_enterprise_modules=True,
-        theme='streamlit'
-    )
-    
-    # Handle deletion
-    if grid_response['selected_rows']:
-        selected_df = pd.DataFrame(grid_response['selected_rows'])
-        
-        st.warning(f"⚠️ **Selected {len(selected_df)} items for deletion:**")
-        st.dataframe(selected_df[['CODE_FIN_STAT', 'NAME_FIN_STAT', 'TYPE_ACCOUNT', 'TYPE_FIN_STATEMENT']])
-        
-        # Check for items with children
-        items_with_children = []
-        for _, row in selected_df.iterrows():
-            children = df[df['CODE_PARENT_FIN_STAT'] == row['CODE_FIN_STAT']]
-            if not children.empty:
-                items_with_children.append(row['CODE_FIN_STAT'])
-        
-        if items_with_children:
-            st.error(f"❌ Cannot delete items with children: {items_with_children}")
-        else:
-            col1, col2 = st.columns([1, 3])
-            
-            with col1:
-                if st.button("Delete Selected", type="primary"):
-                    deleted_count = 0
-                    for _, row in selected_df.iterrows():
-                        if data_manager.delete_coa_item(row['CODE_FIN_STAT'], user="current_user"):
-                            deleted_count += 1
-                    
-                    st.success(f"✅ Successfully deleted {deleted_count} items")
-                    st.rerun()
-            
-            with col2:
-                st.info("💡 **Note:** Only items without children can be deleted")
-    
-    else:
-        st.info("👆 Select items from the table above to delete them")
 
 def show_validation_results(df: pd.DataFrame, data_manager: COADataManager):
     """Show COA validation results"""
@@ -504,64 +437,12 @@ def display_hierarchy_item(item_data: Dict, level: int, parent_path: str = "", d
                 st.session_state[f"show_add_child_{data['CODE_FIN_STAT']}"] = True
                 st.rerun()
         
-        # Show children if any (only when expanded)
+        # Show children if any (recursively with nested expanders)
         if children:
             st.write("**Children:**")
             for child_data in children:
                 display_hierarchy_item(child_data, level + 1, current_path, data_manager)
 
-def show_data_table(df: pd.DataFrame):
-    """Display COA data in AG Grid with hierarchical features"""
-    
-    # Configure AG Grid for COA data
-    gb = GridOptionsBuilder.from_dataframe(df)
-    gb.configure_side_bar()
-    gb.configure_selection('multiple', use_checkbox=True)
-    gb.configure_default_column(enablePivot=True, enableValue=True, enableRowGroup=True)
-    
-    # Configure columns with COA-specific settings
-    gb.configure_column("HIERARCHY_LEVEL", header_name="Level", width=80, type=["numericColumn"])
-    gb.configure_column("NUM_FIN_STAT_ORDER", header_name="Order", width=80, type=["numericColumn"])
-    gb.configure_column("CODE_FIN_STAT", header_name="Code", width=120, pinned="left")
-    gb.configure_column("NAME_FIN_STAT", header_name="Name", width=250)
-    gb.configure_column("CODE_PARENT_FIN_STAT", header_name="Parent Code", width=120)
-    gb.configure_column("TYPE_ACCOUNT", header_name="Account Type", width=100)
-    gb.configure_column("TYPE_FIN_STATEMENT", header_name="Statement Type", width=120)
-    gb.configure_column("NAME_FIN_STAT_ENG", header_name="English Name", width=250)
-    
-    # Add cell styling for hierarchy levels with better visualization
-    gb.configure_column("HIERARCHY_LEVEL", cellStyle={
-        "function": "params => {"
-        "  const level = params.value;"
-        "  if (level === 0) return { backgroundColor: '#e6f2ff', fontWeight: 'bold', borderLeft: '4px solid #297cf7' };"
-        "  if (level === 1) return { backgroundColor: '#f0f8ff', color: '#297cf7', borderLeft: '4px solid #297cf7', paddingLeft: '20px' };"
-        "  if (level === 2) return { backgroundColor: '#f8f9fa', color: '#666', borderLeft: '4px solid #297cf7', paddingLeft: '40px' };"
-        "  return { backgroundColor: '#fafafa', color: '#999', borderLeft: '4px solid #297cf7', paddingLeft: '60px' };"
-        "}"
-    })
-    
-    # Add cell styling for name column with indentation
-    gb.configure_column("NAME_FIN_STAT", cellStyle={
-        "function": "params => {"
-        "  const level = params.data.HIERARCHY_LEVEL || 0;"
-        "  const paddingLeft = (level * 20) + 10;"
-        "  return { paddingLeft: paddingLeft + 'px' };"
-        "}"
-    })
-    
-    grid_options = gb.build()
-    
-    # Display the grid
-    AgGrid(
-        df,
-        gridOptions=grid_options,
-        height=600,
-        width='100%',
-        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
-        update_mode=GridUpdateMode.MODEL_CHANGED,
-        allow_unsafe_jscode=True,
-        enable_enterprise_modules=True
-    )
 
 @st.dialog("✏️ Edit Account")
 def show_edit_account_popup(account_code: str, data_manager: COADataManager):

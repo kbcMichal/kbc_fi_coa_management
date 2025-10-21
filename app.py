@@ -4,9 +4,10 @@ Main application entry point with Hydralit navigation
 """
 
 import streamlit as st
+import streamlit_nested_layout
 import hydralit_components as hc
 import pandas as pd
-from pages.coa_editor import show_coa_metrics, show_hierarchy_view, show_data_table, show_search_filter, show_edit_data, show_add_new_item, display_hierarchy_item
+from pages.coa_editor import show_coa_metrics, show_hierarchy_view, show_search_filter, show_edit_data, show_add_new_item, display_hierarchy_item
 from pages.coa_import_export import show_coa_import_export
 from pages.analytics import show_analytics
 from pages.coa_transformation import show_coa_transformation
