@@ -423,17 +423,17 @@ def display_hierarchy_item(item_data: Dict, level: int, parent_path: str = "", d
         col1, col2, col3 = st.columns([1, 1, 1])
         
         with col1:
-            if st.button("✏️ Edit", key=f"edit_{data['CODE_FIN_STAT']}", help=f"Edit account {data['CODE_FIN_STAT']}", width='stretch'):
+            if st.button("✏️ Edit", key=f"edit_{data['CODE_FIN_STAT']}", help=f"Edit account {data['CODE_FIN_STAT']}", use_container_width=True):
                 st.session_state[f"show_edit_account_{data['CODE_FIN_STAT']}"] = True
                 st.rerun()
         
         with col2:
-            if st.button("🗑️ Delete", key=f"delete_{data['CODE_FIN_STAT']}", help=f"Delete account {data['CODE_FIN_STAT']}", type="secondary", width='stretch'):
+            if st.button("🗑️ Delete", key=f"delete_{data['CODE_FIN_STAT']}", help=f"Delete account {data['CODE_FIN_STAT']}", type="secondary", use_container_width=True):
                 st.session_state[f"show_delete_confirm_{data['CODE_FIN_STAT']}"] = True
                 st.rerun()
         
         with col3:
-            if st.button("➕ Add Child", key=f"add_child_{data['CODE_FIN_STAT']}", help=f"Add a new child account under {data['CODE_FIN_STAT']}", width='stretch'):
+            if st.button("➕ Add Child", key=f"add_child_{data['CODE_FIN_STAT']}", help=f"Add a new child account under {data['CODE_FIN_STAT']}", use_container_width=True):
                 st.session_state[f"show_add_child_{data['CODE_FIN_STAT']}"] = True
                 st.rerun()
         
@@ -527,10 +527,10 @@ def show_edit_account_popup(account_code: str, data_manager: COADataManager):
         col1, col2, col3 = st.columns([1, 1, 2])
         
         with col1:
-            submitted = st.form_submit_button("Save", type="primary", width='stretch')
+            submitted = st.form_submit_button("Save", type="primary", use_container_width=True)
         
         with col2:
-            if st.form_submit_button("Cancel", width='stretch'):
+            if st.form_submit_button("Cancel", use_container_width=True):
                 st.session_state.active_dialog = None
                 st.session_state[f"show_edit_account_{account_code}"] = False
                 st.rerun()
@@ -640,10 +640,10 @@ def show_add_child_popup(parent_code: str, data_manager: COADataManager):
         col1, col2, col3 = st.columns([1, 1, 2])
         
         with col1:
-            submitted = st.form_submit_button("Add Child", type="primary", width='stretch')
+            submitted = st.form_submit_button("Add Child", type="primary", use_container_width=True)
         
         with col2:
-            if st.form_submit_button("Cancel", width='stretch'):
+            if st.form_submit_button("Cancel", use_container_width=True):
                 st.session_state.active_dialog = None
                 st.session_state[f"show_add_child_{parent_code}"] = False
                 st.rerun()
@@ -763,7 +763,7 @@ def show_delete_confirmation_popup(account_code: str, data_manager: COADataManag
         col1, col2, col3 = st.columns([1, 1, 2])
         
         with col1:
-            if st.form_submit_button("🗑️ Delete", type="primary", width='stretch'):
+            if st.form_submit_button("🗑️ Delete", type="primary", use_container_width=True):
                 if confirmation_code == account_code:
                     # Actually delete the item
                     success = data_manager.delete_coa_item(account_code, user="current_user")
@@ -781,7 +781,7 @@ def show_delete_confirmation_popup(account_code: str, data_manager: COADataManag
                     st.error(f"❌ Code mismatch! You entered '{confirmation_code}' but the account code is '{account_code}'")
         
         with col2:
-            if st.form_submit_button("Cancel", width='stretch'):
+            if st.form_submit_button("Cancel", use_container_width=True):
                 st.session_state.active_dialog = None
                 st.session_state[f"show_delete_confirm_{account_code}"] = False
                 st.rerun()
