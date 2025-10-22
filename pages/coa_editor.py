@@ -423,17 +423,17 @@ def display_hierarchy_item(item_data: Dict, level: int, parent_path: str = "", d
         col1, col2, col3 = st.columns([1, 1, 1])
         
         with col1:
-            if st.button("✏️ Edit", key=f"edit_{data['CODE_FIN_STAT']}", help=f"Edit account {data['CODE_FIN_STAT']}", use_container_width=True):
+            if st.button("✏️ Edit", key=f"edit_{data['CODE_FIN_STAT']}", help=f"Edit account {data['CODE_FIN_STAT']}", width='stretch'):
                 st.session_state[f"show_edit_account_{data['CODE_FIN_STAT']}"] = True
                 st.rerun()
         
         with col2:
-            if st.button("🗑️ Delete", key=f"delete_{data['CODE_FIN_STAT']}", help=f"Delete account {data['CODE_FIN_STAT']}", type="secondary", use_container_width=True):
+            if st.button("🗑️ Delete", key=f"delete_{data['CODE_FIN_STAT']}", help=f"Delete account {data['CODE_FIN_STAT']}", type="secondary", width='stretch'):
                 st.session_state[f"show_delete_confirm_{data['CODE_FIN_STAT']}"] = True
                 st.rerun()
         
         with col3:
-            if st.button("➕ Add Child", key=f"add_child_{data['CODE_FIN_STAT']}", help=f"Add a new child account under {data['CODE_FIN_STAT']}", use_container_width=True):
+            if st.button("➕ Add Child", key=f"add_child_{data['CODE_FIN_STAT']}", help=f"Add a new child account under {data['CODE_FIN_STAT']}", width='stretch'):
                 st.session_state[f"show_add_child_{data['CODE_FIN_STAT']}"] = True
                 st.rerun()
         
@@ -527,10 +527,10 @@ def show_edit_account_popup(account_code: str, data_manager: COADataManager):
         col1, col2, col3 = st.columns([1, 1, 2])
         
         with col1:
-            submitted = st.form_submit_button("Save", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("Save", type="primary", width='stretch')
         
         with col2:
-            if st.form_submit_button("Cancel", use_container_width=True):
+            if st.form_submit_button("Cancel", width='stretch'):
                 st.session_state.active_dialog = None
                 st.session_state[f"show_edit_account_{account_code}"] = False
                 st.rerun()
@@ -640,10 +640,10 @@ def show_add_child_popup(parent_code: str, data_manager: COADataManager):
         col1, col2, col3 = st.columns([1, 1, 2])
         
         with col1:
-            submitted = st.form_submit_button("Add Child", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("Add Child", type="primary", width='stretch')
         
         with col2:
-            if st.form_submit_button("Cancel", use_container_width=True):
+            if st.form_submit_button("Cancel", width='stretch'):
                 st.session_state.active_dialog = None
                 st.session_state[f"show_add_child_{parent_code}"] = False
                 st.rerun()
@@ -763,7 +763,7 @@ def show_delete_confirmation_popup(account_code: str, data_manager: COADataManag
         col1, col2, col3 = st.columns([1, 1, 2])
         
         with col1:
-            if st.form_submit_button("🗑️ Delete", type="primary", use_container_width=True):
+            if st.form_submit_button("🗑️ Delete", type="primary", width='stretch'):
                 if confirmation_code == account_code:
                     # Actually delete the item
                     success = data_manager.delete_coa_item(account_code, user="current_user")
@@ -781,77 +781,128 @@ def show_delete_confirmation_popup(account_code: str, data_manager: COADataManag
                     st.error(f"❌ Code mismatch! You entered '{confirmation_code}' but the account code is '{account_code}'")
         
         with col2:
-            if st.form_submit_button("Cancel", use_container_width=True):
+            if st.form_submit_button("Cancel", width='stretch'):
                 st.session_state.active_dialog = None
                 st.session_state[f"show_delete_confirm_{account_code}"] = False
                 st.rerun()
 
 def show_search_filter(data_manager: COADataManager, business_unit: str = None):
-    """Show search and filter interface"""
+    """Show search and filter interface with dependent filters"""
     
     st.subheader("Search & Filter COA")
+    
+    # Get base data
+    df = data_manager.filter_by_business_unit(business_unit) if business_unit else data_manager.data
+    
+    if df is None or df.empty:
+        st.warning("No data available for filtering")
+        return
+    
+    # Initialize session state for filters if not exists
+    if 'filter_statement_type' not in st.session_state:
+        st.session_state['filter_statement_type'] = "All"
+    if 'filter_account_type' not in st.session_state:
+        st.session_state['filter_account_type'] = "All"
+    if 'filter_hierarchy_level' not in st.session_state:
+        st.session_state['filter_hierarchy_level'] = "All"
     
     col1, col2 = st.columns(2)
     
     with col1:
-        search_query = st.text_input("Search", placeholder="Search by name, code, or English name")
-        
-        type_account = st.selectbox(
-            "Account Type",
-            ["All", "A (Assets)", "P (Liabilities/Equity)", "R (Revenue)", "C (Cost)"],
-            key="type_account_filter"
-        )
-        
+        # Statement Type filter first (affects other filters)
         type_statement = st.selectbox(
             "Statement Type",
             ["All", "BS (Balance Sheet)", "PL (Profit & Loss)"],
-            key="type_statement_filter"
-        )
-    
-    with col2:
-        hierarchy_level = st.selectbox(
-            "Hierarchy Level",
-            ["All"] + [str(i) for i in range(6)],
-            key="hierarchy_level_filter"
+            key="type_statement_filter",
+            index=["All", "BS (Balance Sheet)", "PL (Profit & Loss)"].index(st.session_state['filter_statement_type'])
         )
         
+        # Update session state
+        st.session_state['filter_statement_type'] = type_statement
+        
+        # Filter data based on statement type
+        filtered_df = df.copy()
+        if type_statement != "All":
+            statement_map = {
+                "BS (Balance Sheet)": "BS",
+                "PL (Profit & Loss)": "PL"
+            }
+            filtered_df = filtered_df[filtered_df['TYPE_FIN_STATEMENT'] == statement_map[type_statement]]
+        
+        # Account Type filter (dependent on statement type)
+        available_account_types = ["All"] + sorted(filtered_df['TYPE_ACCOUNT'].unique().tolist())
+        
+        # Reset account type if it's not available in current filtered data
+        if st.session_state['filter_account_type'] not in available_account_types:
+            st.session_state['filter_account_type'] = "All"
+        
+        type_account = st.selectbox(
+            "Account Type",
+            available_account_types,
+            key="type_account_filter",
+            index=available_account_types.index(st.session_state['filter_account_type'])
+        )
+        
+        # Update session state
+        st.session_state['filter_account_type'] = type_account
+        
+        # Further filter by account type
+        if type_account != "All":
+            filtered_df = filtered_df[filtered_df['TYPE_ACCOUNT'] == type_account]
+    
+    with col2:
+        # Hierarchy Level filter (dependent on previous filters)
+        available_levels = ["All"] + sorted([str(int(x)) for x in filtered_df['HIERARCHY_LEVEL'].unique() if pd.notna(x)])
+        
+        # Reset hierarchy level if it's not available in current filtered data
+        if st.session_state['filter_hierarchy_level'] not in available_levels:
+            st.session_state['filter_hierarchy_level'] = "All"
+        
+        hierarchy_level = st.selectbox(
+            "Hierarchy Level",
+            available_levels,
+            key="hierarchy_level_filter",
+            index=available_levels.index(st.session_state['filter_hierarchy_level'])
+        )
+        
+        # Update session state
+        st.session_state['filter_hierarchy_level'] = hierarchy_level
+        
+        # Search input
+        search_query = st.text_input("Search", placeholder="Search by name, code, or English name")
+        
         if st.button("Apply Filters"):
-            # Get filtered data
-            df = data_manager.filter_by_business_unit(business_unit) if business_unit else data_manager.data
+            # Apply all filters step by step
+            final_df = df.copy()
             
-            if df is not None and not df.empty:
-                # Apply filters
-                filtered_df = df.copy()
-                
-                if search_query:
-                    mask = (
-                        filtered_df['NAME_FIN_STAT'].str.contains(search_query, case=False, na=False) |
-                        filtered_df['CODE_FIN_STAT'].str.contains(search_query, case=False, na=False) |
-                        filtered_df['NAME_FIN_STAT_ENG'].str.contains(search_query, case=False, na=False)
-                    )
-                    filtered_df = filtered_df[mask]
-                
-                if type_account != "All":
-                    account_type_map = {
-                        "A (Assets)": "A",
-                        "P (Liabilities/Equity)": "P", 
-                        "R (Revenue)": "R",
-                        "C (Cost)": "C"
-                    }
-                    filtered_df = filtered_df[filtered_df['TYPE_ACCOUNT'] == account_type_map[type_account]]
-                
-                if type_statement != "All":
-                    statement_map = {
-                        "BS (Balance Sheet)": "BS",
-                        "PL (Profit & Loss)": "PL"
-                    }
-                    filtered_df = filtered_df[filtered_df['TYPE_FIN_STATEMENT'] == statement_map[type_statement]]
-                
-                if hierarchy_level != "All":
-                    filtered_df = filtered_df[filtered_df['HIERARCHY_LEVEL'] == int(hierarchy_level)]
-                
-                # Display results
-                st.write(f"Found {len(filtered_df)} items matching your criteria:")
-                st.dataframe(filtered_df[['CODE_FIN_STAT', 'NAME_FIN_STAT', 'TYPE_ACCOUNT', 'TYPE_FIN_STATEMENT']])
+            # Apply statement type filter
+            if type_statement != "All":
+                statement_map = {
+                    "BS (Balance Sheet)": "BS",
+                    "PL (Profit & Loss)": "PL"
+                }
+                final_df = final_df[final_df['TYPE_FIN_STATEMENT'] == statement_map[type_statement]]
+            
+            # Apply account type filter
+            if type_account != "All":
+                final_df = final_df[final_df['TYPE_ACCOUNT'] == type_account]
+            
+            # Apply hierarchy level filter
+            if hierarchy_level != "All":
+                final_df = final_df[final_df['HIERARCHY_LEVEL'] == int(hierarchy_level)]
+            
+            # Apply search query
+            if search_query:
+                mask = (
+                    final_df['NAME_FIN_STAT'].str.contains(search_query, case=False, na=False) |
+                    final_df['CODE_FIN_STAT'].str.contains(search_query, case=False, na=False) |
+                    final_df['NAME_FIN_STAT_ENG'].str.contains(search_query, case=False, na=False)
+                )
+                final_df = final_df[mask]
+            
+            # Display results
+            st.write(f"Found {len(final_df)} items matching your criteria:")
+            if not final_df.empty:
+                st.dataframe(final_df[['CODE_FIN_STAT', 'NAME_FIN_STAT', 'TYPE_ACCOUNT', 'TYPE_FIN_STATEMENT', 'HIERARCHY_LEVEL']])
             else:
-                st.warning("No data available for filtering")
+                st.info("No items match the selected criteria")

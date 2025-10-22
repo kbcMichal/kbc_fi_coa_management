@@ -167,14 +167,15 @@ def show_coa_transformation(data_manager: COADataManager):
             st.markdown("**COA cross-joined with Business Subunits**")
             
             transformer = st.session_state.get('transformer')
-            if transformer:
+            business_subunits = st.session_state.get('business_subunits')
+            if transformer and business_subunits is not None:
                 # Select business unit
                 business_units = business_subunits['FK_BUSINESS_UNIT'].unique().tolist()
                 selected_bu = st.selectbox("Select Business Unit", business_units)
                 
                 if st.button("Generate Business Subunit COA", use_container_width=True):
                     try:
-                        bu_coa = transformer.create_business_subunit_coa(selected_bu)
+                        bu_coa = transformer.create_business_subunit_coa(selected_bu, business_subunits)
                         st.success(f"✅ Generated {len(bu_coa)} records for {selected_bu}")
                         st.dataframe(bu_coa.head(100), use_container_width=True, height=400)
                         
@@ -189,19 +190,22 @@ def show_coa_transformation(data_manager: COADataManager):
                         )
                     except Exception as e:
                         st.error(f"❌ Error: {e}")
+            else:
+                st.error("❌ Business subunits must be loaded first. Please load them in Step 1.")
         
         with tab3:
             st.markdown("**Mapping to Central (FININ) COA**")
             
             transformer = st.session_state.get('transformer')
-            if transformer:
+            business_subunits = st.session_state.get('business_subunits')
+            if transformer and business_subunits is not None:
                 # Select business unit
                 business_units = business_subunits['FK_BUSINESS_UNIT'].unique().tolist()
                 selected_bu = st.selectbox("Select Business Unit for Mapping", business_units, key="mapping_bu")
                 
                 if st.button("Generate Central COA Mapping", use_container_width=True):
                     try:
-                        mapping = transformer.create_mapping_to_central_coa(selected_bu)
+                        mapping = transformer.create_mapping_to_central_coa(selected_bu, business_subunits)
                         st.success(f"✅ Generated {len(mapping)} mapping records")
                         st.dataframe(mapping, use_container_width=True, height=400)
                         
@@ -216,6 +220,8 @@ def show_coa_transformation(data_manager: COADataManager):
                         )
                     except Exception as e:
                         st.error(f"❌ Error: {e}")
+            else:
+                st.error("❌ Business subunits must be loaded first. Please load them in Step 1.")
         
         with tab4:
             st.markdown("**Debug: Missing Records Check**")

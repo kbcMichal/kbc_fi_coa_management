@@ -246,6 +246,9 @@ def show_merged_editor(data_manager: COADataManager):
             help="Choose a financial statement type (BS=Balance Sheet, PL=Profit & Loss)"
         )
     
+    # Filter data by selected business unit and financial statement FIRST
+    df = df[(df['FK_BUSINESS_UNIT'] == selected_bu) & (df['TYPE_FIN_STATEMENT'] == selected_fin_stmt)].copy()
+    
     with col3:
         # Searchable dropdown for account selection
         # Get all unique account names for the dropdown, sorted by name for easier searching
@@ -288,9 +291,6 @@ def show_merged_editor(data_manager: COADataManager):
             )
         else:
             selected_hierarchy = "All"
-    
-    # Filter data by selected business unit and financial statement
-    df = df[(df['FK_BUSINESS_UNIT'] == selected_bu) & (df['TYPE_FIN_STATEMENT'] == selected_fin_stmt)].copy()
     
     # Sort by order column for proper display
     if 'NUM_FIN_STAT_ORDER' in df.columns:

@@ -273,7 +273,7 @@ class COATransformer:
         
         return result
     
-    def create_business_subunit_coa(self, business_unit_code: str = 'KBC') -> pd.DataFrame:
+    def create_business_subunit_coa(self, business_unit_code: str = 'KBC', business_subunits: pd.DataFrame = None) -> pd.DataFrame:
         """
         Cross-joins COA with business subunits for a specific business unit
         Replicates: DC_KBC_COA
@@ -281,12 +281,15 @@ class COATransformer:
         if self.coa_output is None:
             raise ValueError("COA must be transformed first. Call transform_coa() first.")
         
-        if self.business_subunits is None:
+        if business_subunits is None:
+            business_subunits = self.business_subunits
+            
+        if business_subunits is None:
             raise ValueError("Business subunits must be loaded first. Call load_business_subunits() first.")
         
         # Filter business subunits for the specified business unit
-        filtered_subunits = self.business_subunits[
-            self.business_subunits['FK_BUSINESS_UNIT'] == business_unit_code
+        filtered_subunits = business_subunits[
+            business_subunits['FK_BUSINESS_UNIT'] == business_unit_code
         ][['PK_BUSINESS_SUBUNIT']]
         
         # Cross join
@@ -298,7 +301,7 @@ class COATransformer:
         
         return result
     
-    def create_mapping_to_central_coa(self, business_unit_code: str = 'KBC') -> pd.DataFrame:
+    def create_mapping_to_central_coa(self, business_unit_code: str = 'KBC', business_subunits: pd.DataFrame = None) -> pd.DataFrame:
         """
         Creates mapping from business unit COA to central (FININ) COA
         Replicates: DC_KBC_2FININ_COA
@@ -306,12 +309,15 @@ class COATransformer:
         if self.coa_input is None:
             raise ValueError("COA input must be provided.")
         
-        if self.business_subunits is None:
+        if business_subunits is None:
+            business_subunits = self.business_subunits
+            
+        if business_subunits is None:
             raise ValueError("Business subunits must be loaded first.")
         
         # Filter business subunits for the specified business unit
-        filtered_subunits = self.business_subunits[
-            self.business_subunits['FK_BUSINESS_UNIT'] == business_unit_code
+        filtered_subunits = business_subunits[
+            business_subunits['FK_BUSINESS_UNIT'] == business_unit_code
         ][['PK_BUSINESS_SUBUNIT']]
         
         # Prepare base data
